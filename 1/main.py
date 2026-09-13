@@ -48,11 +48,6 @@ def compareAfterComa(a : float, b : float) :
     else :
         return a
 
-# #Скалярний добуток векторів
-# vectX = array.array('f', [1,2,2])
-# vectY = array.array('f', [2,0,1])
-# print(f" Скалярний добуток векторів x({', '.join(str(x) for x in vectX)}) та y({', '.join(str(x) for x in vectY)}) = {VectScallMult(vectX, vectY)}")
-
 def main():
 
     print(
