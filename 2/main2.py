@@ -2,6 +2,10 @@ import math
 import array
 import re
 
+EPSILON = 1e-12
+MAX_ITERATIONS = 50
+INITIAL_GUESS = [0.0, 0.0, 0.0]
+
 #варіант 15
 # -7x1 +3x2 +2x3 = 13
 # -3x1 -7x2 -2x3 = 25       
@@ -42,8 +46,71 @@ class Slar :
                 print(f"Варіант вибору {inpType} недійсний")
                 return False
 
-    def methodGaus(self) -> bool:
-        pass
+    def calcVectResidual(self, x : list[float]) -> tuple[list[float], float] :  #обч вектор невязки r = b - Ax, його неск форму ||r||inf
+        r = [.0] * self.n
+        for i in range(self.n) : 
+            Axi = sum(self.matrixA[i][j] * x[i] for j in range(self.n))
+            r[i] = self.matrixB[i] - Axi
+        normR = max(abs(val) for val in r)
+        return r, normR
+
+    def checkSuffConditionConv(self) -> bool :  #перевірка достатньої умови збіжності (|a_ii| > sum_{j!=i} |a_ij|)
+        striclDomm = True
+        for i in range(self.n) :
+            diag = abs(self.matrixA[i][i])
+            offDiag = sum(abs(self.matrixA[i][j] for j in range(self.n) if j != i))
+
+            if diag <= offDiag:
+                striclDomm = False
+        return striclDomm
+
+
+    def methodGaus(self, eps : float = EPSILON) -> tuple[bool, list[float] | None]:
+        n =self.n
+        A = [row[:] for row in self.matrixA]
+        b = self.matrixB[:]
+
+        swapCount = 0
+        det = 1.0
+
+        for k in range(n):
+            #пошук макс ел за модулем у к стовпці
+            maxRow = k
+            maxVal = abs(A[k][k])
+            for i in range(k+1, n):
+                maxVal = abs(A[i][k])
+                maxRow = i
+
+            #перевірка на виродженість
+            if maxVal < eps:
+                print(f"Помилка!!! Матриця вироджена або близька до виродженої (|a_kk| < {eps:.1e}).")
+                return False, None
+
+            #перестановка рядків
+            if maxRow != k:
+                A[k], A[maxRow] = A[maxRow], A[k]
+                b[k], b[maxRow] = b[maxRow], b[k]
+                swap_count += 1
+
+            det *= A[k][k]
+
+            #виключення невідомих
+            for i in range(k+1, n):
+                fct = A[i][k] / A[k][k]
+                A[i][k] = 0.0
+                for j in range(k+1, n):
+                    A[i][j] -= fct * A[k][j]
+                b[i] -= fct * b[k]
+
+            #обч. та вивід показника
+            x = [0.0] * n
+            for i in range(n -1, -1, -1):
+                sumAx = sum(A[i][j] * x[j] for j in range(i+1, n))
+                x[i] = (b[i] - sumAx) / A[i][j]
+
+            print("\nРозвязок:")
+            for i in range(n):
+                print(f"x{i + 1} = {x[i]:.6f}")
 
     def methodYacobi(self) -> bool:
         pass
@@ -59,7 +126,7 @@ class Slar :
         for i in range(self.n):
             print(" | ", end="")
             for j in range(self.n):
-                print(f"{self.matrixA[i][j]:6.2f}", end="")
+                print(f"{self.matrixA[i][j]:8.2f}", end=" ")
             print(f" | {self.matrixB[i]:6.2f}")
 
 
@@ -78,11 +145,11 @@ class Slar :
 
         for i in range(self.n):
             row, self.matrixB[i] = parseEquastion(lines[i])
-            self.matrixA = [row[var] for var in sorted(row.keys())]
+            self.matrixA[i] = [row[var] for var in sorted(row.keys())]
 
         return True
             
-def parseEquastion(eqStr : str) :
+def parseEquastion(eqStr : str):
         leftPart, rightpart = eqStr.split("=")
 
         pattern = r"([+-]?\s*\d*)\s*(x\d+)"
@@ -94,7 +161,7 @@ def parseEquastion(eqStr : str) :
 
             if clear in ("", "+"):
                 value = 1.0
-            elif clear in ("", "-"):
+            elif clear == "-":
                 value = -1.0
             else:
                 value = float(clear)
@@ -102,9 +169,6 @@ def parseEquastion(eqStr : str) :
             coefs[varName] = value
 
         return coefs, rhs
-
-
-
 
 def main() :
     slar = Slar(3)
