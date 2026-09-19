@@ -64,8 +64,10 @@ class Slar :
         return striclDomm
 
 
-    def methodGaus(self, eps : float = EPSILON) -> tuple[bool, list[float] | None]:
-        n =self.n
+    def methodGaus(
+        self, eps: float = EPSILON
+    ) -> tuple[bool, list[float] | None]:
+        n = self.n
         A = [row[:] for row in self.matrixA]
         b = self.matrixB[:]
 
@@ -73,17 +75,19 @@ class Slar :
         det = 1.0
 
         for k in range(n):
-            #пошук макс ел за модулем у к стовпці
+            #пошук макс ел за модулем у k-му стовпці
             maxRow = k
             maxVal = abs(A[k][k])
-            for i in range(k+1, n):
+            for i in range(k + 1, n):
                 if abs(A[i][k]) > maxVal:
                     maxVal = abs(A[i][k])
                     maxRow = i
 
             #перевірка на виродженість
             if maxVal < eps:
-                print(f"Помилка!!! Матриця вироджена або близька до виродженої (|a_kk| < {eps:.1e}).")
+                print(
+                    f"Помилка!!! Матриця вироджена або близька до виродженої (|a_kk| < {eps:.1e})."
+                )
                 return False, None
 
             #перестановка рядків
@@ -92,31 +96,34 @@ class Slar :
                 b[k], b[maxRow] = b[maxRow], b[k]
                 swapCount += 1
 
-        det *= A[k][k]
+            #накопичення визначника
+            det *= A[k][k]
 
             #виключення невідомих
-        for i in range(k+1, n):
-            fct = A[i][k] / A[k][k]
-            A[i][k] = 0.0
-            for j in range(k+1, n):
-                A[i][j] -= fct * A[k][j]
-            b[i] -= fct * b[k]
+            for i in range(k + 1, n):
+                fct = A[i][k] / A[k][k]
+                A[i][k] = 0.0
+                for j in range(k + 1, n):
+                    A[i][j] -= fct * A[k][j]
+                b[i] -= fct * b[k]
 
-        #обч. та вивід показника
+        #обч знаку визначника
         det *= (-1) ** swapCount
-        print("\nРезультат за методом Гауса:" \
-        f"Кількість перестановок рядків: {swapCount}"\
-        f"Визначник матриці (det A): {det}")
+        print(
+            "\nРезультат за методом Гауса:\n"
+            f"Кількість перестановок рядків: {swapCount}\n"
+            f"Визначник матриці (det A): {det:.6f}"
+        )
 
-        #зворотній хід
+        #зворотний хід
         x = [0.0] * n
-        for i in range(n -1, -1, -1):
-            sumAx = sum(A[i][j] * x[j] for j in range(i+1, n))
+        for i in range(n - 1, -1, -1):
+            sumAx = sum(A[i][j] * x[j] for j in range(i + 1, n))
             x[i] = (b[i] - sumAx) / A[i][i]
 
         print("\nРозвязок:")
         for i in range(n):
-             print(f"x{i + 1} = {x[i]:.6f}")
+            print(f"x{i + 1} = {x[i]:.6f}")
 
         r, normr = self.calcVectResidual(x)
         print(f"Норма невязки ||r||inf = {normr:.6e}")
@@ -189,7 +196,7 @@ def main() :
             "2. Вручну через консоль 'cmd'" \
             ">>", end="")
     slar.fillMatrix(str(input()))
-    slar.simpleMatrixOutput()
+    #slar.simpleMatrixOutput()
     slar.methodGaus()
 
 
