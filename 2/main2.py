@@ -50,7 +50,7 @@ class Slar :
                 return False
             
 
-    def calcVectResidual(self, x : list[float]) -> tuple[list[float], float] :  #обч вектор невязки r = b - Ax, його неск форму ||r||inf
+    def calcVectResidual(self, x : list[float]) -> tuple[list[float], float] :
         r = [.0] * self.n
         for i in range(self.n) : 
             Axi = sum(self.matrixA[i][j] * x[j] for j in range(self.n))
@@ -59,7 +59,7 @@ class Slar :
         return r, normR
     
 
-    def checkSuffConditionConv(self) -> bool :  #перевірка достатньої умови збіжності (|a_ii| > sum_{j!=i} |a_ij|)
+    def checkSuffConditionConv(self) -> bool :
         striclDomm = True
         for i in range(self.n) :
             diag = abs(self.matrixA[i][i])
@@ -80,7 +80,6 @@ class Slar :
         det = 1.0
 
         for k in range(n):
-            #пошук макс ел за модулем у k-му стовпці
             maxRow = k
             maxVal = abs(A[k][k])
             for i in range(k + 1, n):
@@ -88,23 +87,19 @@ class Slar :
                     maxVal = abs(A[i][k])
                     maxRow = i
 
-            #перевірка на виродженість
             if maxVal < eps:
                 print(
                     f"Помилка!!! Матриця вироджена або близька до виродженої (|a_kk| < {eps:.1e})."
                 )
                 return False, None
 
-            #перестановка рядків
             if maxRow != k:
                 A[k], A[maxRow] = A[maxRow], A[k]
                 b[k], b[maxRow] = b[maxRow], b[k]
                 swapCount += 1
 
-            #накопичення визначника
             det *= A[k][k]
 
-            #виключення невідомих
             for i in range(k + 1, n):
                 fct = A[i][k] / A[k][k]
                 A[i][k] = 0.0
@@ -112,7 +107,6 @@ class Slar :
                     A[i][j] -= fct * A[k][j]
                 b[i] -= fct * b[k]
 
-        #обч знаку визначника
         det *= (-1) ** swapCount
         print(
             "\nРезультат за методом Гауса:\n"
@@ -120,7 +114,6 @@ class Slar :
             f"Визначник матриці (det A): {det:.6f}"
         )
 
-        #зворотний хід
         x = [0.0] * n
         for i in range(n - 1, -1, -1):
             sumAx = sum(A[i][j] * x[j] for j in range(i + 1, n))
