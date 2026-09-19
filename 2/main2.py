@@ -1,10 +1,9 @@
-import math
-import array
 import re
 
-EPSILON = 1e-12
-MAX_ITERATIONS = 50
-INITIAL_GUESS = [0.0, 0.0, 0.0]
+DEF_DIM = 3
+EPSILON_GAUS = 1e-12
+EPSILON_ITER = 1e-3
+MAX_ITERATIONS = 100
 
 #варіант 15
 # -7x1 +3x2 +2x3 = 13
@@ -12,8 +11,12 @@ INITIAL_GUESS = [0.0, 0.0, 0.0]
 # -x1 -2x2 -6x3 = 13
 
 class Slar :
-    def __init__(self, nInp: int) :
-        self.n = nInp
+    def __init__(self, nInp: int = None) :
+        if nInp is None :
+            self.n = DEF_DIM
+        else:
+            self.n = nInp
+
         self.matrixA = [[0.0] * self.n for _ in range(self.n)]
         self.matrixB = [0.0] * self.n
         self.matrixAns = [[0.0] * self.n for _ in range(self.n)]
@@ -65,7 +68,7 @@ class Slar :
 
 
     def methodGaus(
-        self, eps: float = EPSILON
+        self, eps: float = EPSILON_GAUS
     ) -> tuple[bool, list[float] | None]:
         n = self.n
         A = [row[:] for row in self.matrixA]
@@ -131,8 +134,46 @@ class Slar :
         return True, x
             
 
-    def methodYacobi(self) -> bool:
-        pass
+    def methodYacobi(self, eps : float = EPSILON_ITER, maxIter : int = MAX_ITERATIONS, x0 : list[float] | None = None) -> tuple[int, list[float]] :
+        n = self.n
+        xPrev = [0.0] * n if x0 is None else x0[:]
+        xCurr = [0.0] * n
+
+        if not self.checkSuffConditionConv() :
+            print("-Умова діагонального переважання не виконується суворо!!!")
+
+
+        print("\nМетод Якобі")
+        colNames = " | ".join(f"{f'x{i+1}':>12}" for i in range(n))
+        header = f" Ітер | {colNames} | {'||x(k)-x(k-1)||':>16}"
+        print("-" * len(header))
+        print(header)
+        print("-" * len(header))
+
+        iters = 0
+        for it in range(1, maxIter + 1) :
+            iters = it
+            for i in range(n) :
+                s = sum(self.matrixA[i][j] * xPrev[j] for j in range(n) if j != i)
+                xCurr[i] = (self.matrixB[i] - s) / self.matrixA[i][i]
+
+            diffNorm = max(abs(curr - prev) for curr, prev in zip(xCurr, xPrev))
+
+            rowVals = " | ".join(f"{val:.6f}" for val in xCurr)
+            print(f"{it:5d} | {rowVals} | {diffNorm:.6e}")
+
+            if diffNorm < eps:
+                break
+            xPrev = xCurr[:]
+
+        print("-" * len(header))
+        print(f"Виконано ітреацій: {iters}")
+        _, normr = self.calcVectResidual(xCurr)
+        print(f"Норма невязки ||r||inf = {normr:.6e}")
+
+        return iters, xCurr
+
+
 
     def methodZeidel(self) -> bool:
         pass
@@ -147,9 +188,6 @@ class Slar :
             for j in range(self.n):
                 print(f"{self.matrixA[i][j]:.2f}", end=" ")
             print(f" | {self.matrixB[i]:.2f}")
-
-
-
 
     def finalMatrixOutput(self):
         pass
@@ -190,7 +228,7 @@ def parseEquastion(eqStr : str):
         return coefs, rhs
 
 def main() :
-    slar = Slar(3)
+    slar = Slar()
     print("Виберіть як вихочети заповнити СЛАР" \
             "1. .txt файд введіть 'file'" \
             "2. Вручну через консоль 'cmd'" \
@@ -198,6 +236,7 @@ def main() :
     slar.fillMatrix(str(input()))
     #slar.simpleMatrixOutput()
     slar.methodGaus()
+    slar.methodYacobi()
 
 
 
