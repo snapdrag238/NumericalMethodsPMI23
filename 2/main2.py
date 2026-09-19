@@ -21,6 +21,7 @@ class Slar :
         self.matrixB = [0.0] * self.n
         self.matrixAns = [[0.0] * self.n for _ in range(self.n)]
 
+
     def fillMatrix(self,inpType : str) -> bool:
         match inpType:
             case "file" :
@@ -48,6 +49,7 @@ class Slar :
             case _ :
                 print(f"Варіант вибору {inpType} недійсний")
                 return False
+            
 
     def calcVectResidual(self, x : list[float]) -> tuple[list[float], float] :  #обч вектор невязки r = b - Ax, його неск форму ||r||inf
         r = [.0] * self.n
@@ -56,6 +58,7 @@ class Slar :
             r[i] = self.matrixB[i] - Axi
         normR = max(abs(val) for val in r)
         return r, normR
+    
 
     def checkSuffConditionConv(self) -> bool :  #перевірка достатньої умови збіжності (|a_ii| > sum_{j!=i} |a_ij|)
         striclDomm = True
@@ -140,10 +143,9 @@ class Slar :
         xCurr = [0.0] * n
 
         if not self.checkSuffConditionConv() :
-            print("-Умова діагонального переважання не виконується суворо!!!")
+            print("-[Yakobi]Умова діагонального переважання не виконується суворо!!!")
 
-
-        print("\nМетод Якобі")
+        print("\nМетод Якобі:")
         colNames = " | ".join(f"{f'x{i+1}':>12}" for i in range(n))
         header = f" Ітер | {colNames} | {'||x(k)-x(k-1)||':>16}"
         print("-" * len(header))
@@ -159,8 +161,8 @@ class Slar :
 
             diffNorm = max(abs(curr - prev) for curr, prev in zip(xCurr, xPrev))
 
-            rowVals = " | ".join(f"{val:.6f}" for val in xCurr)
-            print(f"{it:5d} | {rowVals} | {diffNorm:.6e}")
+            rowVals = " | ".join(f"{val:12.6f}" for val in xCurr)
+            print(f"{it:5d} | {rowVals} | {diffNorm:16.6e}")
 
             if diffNorm < eps:
                 break
@@ -172,11 +174,49 @@ class Slar :
         print(f"Норма невязки ||r||inf = {normr:.6e}")
 
         return iters, xCurr
+    
 
+    def methodZeidel(self, eps : float = EPSILON_ITER, maxIter : int = MAX_ITERATIONS, x0 : list[float] | None = None) -> tuple[int, list[float]]:
+        n = self.n
+        x = [0.0] * n if x0 is None else x0[:]
 
+        if not self.checkSuffConditionConv() :
+                    print("-[Zeidal]Умова діагонального переважання не виконується суворо!!!")
 
-    def methodZeidel(self) -> bool:
-        pass
+        print("\nМетод Зейдаля:")
+        colNames = " | ".join(f"{f'x{i+1}':>12}" for i in range(n))
+        header = f" Ітер | {colNames} | {'||x(k)-x(k-1)||':>16}"
+        print("-" * len(header))
+        print(header)
+        print("-" * len(header))
+
+        iters = 0
+        for it in range(1, maxIter + 1) :
+            iters = it
+            maxDiff = 0.0
+
+            for i in range(n) :
+                s = sum(self.matrixA[i][j] * x[j] for j in range(n) if j != i)
+                newXi = (self.matrixB[i] - s) / self.matrixA[i][i]
+
+                diff = abs(newXi - x[i])
+                if diff > maxDiff:
+                    maxDiff = diff
+                x[i] = newXi
+
+            rowVals = " | ".join(f"{val:12.6}" for val in x)
+            print(f"{it:5d} | {rowVals} | {maxDiff:16.6e}")
+
+            if maxDiff < eps :
+                break
+
+        print("-" * len(header))
+        print(f"Виконано ітерацій : {iters}")
+        _, normr = self.calcVectResidual(x)
+        print(f"Норма невязки ||r||inf = {normr:.6e}")
+
+        return iters, x
+    
 
     def simpleMatrixOutput(self):
         print("Тип matrixA:", type(self.matrixA))
@@ -189,8 +229,6 @@ class Slar :
                 print(f"{self.matrixA[i][j]:.2f}", end=" ")
             print(f" | {self.matrixB[i]:.2f}")
 
-    def finalMatrixOutput(self):
-        pass
 
     def matrixFileRead(self,fname : str) -> bool:
         try:
@@ -205,6 +243,7 @@ class Slar :
             self.matrixA[i] = [row[var] for var in sorted(row.keys())]
 
         return True
+    
             
 def parseEquastion(eqStr : str):
         leftPart, rightpart = eqStr.split("=")
@@ -227,6 +266,7 @@ def parseEquastion(eqStr : str):
 
         return coefs, rhs
 
+
 def main() :
     slar = Slar()
     print("Виберіть як вихочети заповнити СЛАР" \
@@ -236,8 +276,8 @@ def main() :
     slar.fillMatrix(str(input()))
     #slar.simpleMatrixOutput()
     slar.methodGaus()
-    slar.methodYacobi()
-
+    slar.methodYacobi(x0 = None)
+    slar.methodZeidel(x0 = None)
 
 
 if __name__ == "__main__" :
