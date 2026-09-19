@@ -32,9 +32,8 @@ class Slar :
                     print("Такий формат файлу не підтримується , спробуйте відкрити файл формату .txt")
                     filename = str(input())
 
-                self.matrixFileRead(filename)
+                return self.matrixFileRead(filename)
 
-                return True
             case "cmd":
                 for i in range(self.n) :
                     for j in range(self.n) :
@@ -142,8 +141,14 @@ class Slar :
         xPrev = [0.0] * n if x0 is None else x0[:]
         xCurr = [0.0] * n
 
-        if not self.checkSuffConditionConv() :
-            print("-[Yakobi]Умова діагонального переважання не виконується суворо!!!")
+        if self.checkSuffConditionConv():
+            print(
+                "\n[Якобі] Перевірка збіжності: матриця МАЄ суворе діагональне переважання. Збіжність гарантована."
+            )
+        else:
+            print(
+                "\n[Якобі] Матриця НЕ МАЄ суворого діагонального переважання! Збіжність не гарантується."
+            )
 
         print("\nМетод Якобі:")
         colNames = " | ".join(f"{f'x{i+1}':>12}" for i in range(n))
@@ -153,6 +158,7 @@ class Slar :
         print("-" * len(header))
 
         iters = 0
+        conv = False
         for it in range(1, maxIter + 1) :
             iters = it
             for i in range(n) :
@@ -165,10 +171,17 @@ class Slar :
             print(f"{it:5d} | {rowVals} | {diffNorm:16.6e}")
 
             if diffNorm < eps:
+                conv = True
                 break
             xPrev = xCurr[:]
 
         print("-" * len(header))
+
+        if not conv:
+            print(
+                f"[Якобі] Досягнуто ліміту {maxIter} ітерацій без досягнення заданої точності eps={eps}!"
+            )
+
         print(f"Виконано ітреацій: {iters}")
         _, normr = self.calcVectResidual(xCurr)
         print(f"Норма невязки ||r||inf = {normr:.6e}")
@@ -180,8 +193,13 @@ class Slar :
         n = self.n
         x = [0.0] * n if x0 is None else x0[:]
 
-        if not self.checkSuffConditionConv() :
-                    print("-[Zeidal]Умова діагонального переважання не виконується суворо!!!")
+        if self.checkSuffConditionConv():
+            print(
+                "\n[Зейдель] Перевірка збіжності: матриця МАЄ суворе діагональне переважання. Збіжність гарантована."
+            )
+        else:
+            print(
+                "\n[Зейдель] Матриця НЕ МАЄ суворого діагонального переважання! Збіжність не гарантується.")
 
         print("\nМетод Зейдаля:")
         colNames = " | ".join(f"{f'x{i+1}':>12}" for i in range(n))
@@ -191,6 +209,7 @@ class Slar :
         print("-" * len(header))
 
         iters = 0
+        conv = False
         for it in range(1, maxIter + 1) :
             iters = it
             maxDiff = 0.0
@@ -204,13 +223,20 @@ class Slar :
                     maxDiff = diff
                 x[i] = newXi
 
-            rowVals = " | ".join(f"{val:12.6}" for val in x)
+            rowVals = " | ".join(f"{val:12.6f}" for val in x)
             print(f"{it:5d} | {rowVals} | {maxDiff:16.6e}")
 
             if maxDiff < eps :
+                conv = True
                 break
 
         print("-" * len(header))
+
+        if not conv:
+            print(
+                f"[Зейдель] Досягнуто ліміту {maxIter} ітерацій без досягнення заданої точності eps={eps}!"
+            )
+        
         print(f"Виконано ітерацій : {iters}")
         _, normr = self.calcVectResidual(x)
         print(f"Норма невязки ||r||inf = {normr:.6e}")
@@ -219,15 +245,15 @@ class Slar :
     
 
     def simpleMatrixOutput(self):
-        print("Тип matrixA:", type(self.matrixA))
-        print("Вміст matrixA:", self.matrixA)
-        print("Тип matrixB:", type(self.matrixB))
-        print("Вміст matrixB:", self.matrixB)
+       # print("Тип matrixA:", type(self.matrixA))
+        #print("Вміст matrixA:", self.matrixA)
+        #print("Тип matrixB:", type(self.matrixB))
+        #print("Вміст matrixB:", self.matrixB)
         for i in range(self.n):
             print(" | ", end="")
             for j in range(self.n):
-                print(f"{self.matrixA[i][j]:.2f}", end=" ")
-            print(f" | {self.matrixB[i]:.2f}")
+                print(f"{self.matrixA[i][j]:8.2f}", end=" ")
+            print(f" | {self.matrixB[i]:8.2f}")
 
 
     def matrixFileRead(self,fname : str) -> bool:
@@ -268,7 +294,7 @@ def parseEquastion(eqStr : str):
 
 
 def printMenu() :
-    print("Головне меню:\n" \
+    print("\n\nГоловне меню:\n" \
     "1. Зчитати матрицю\n" \
     "2. Вивести поточну матрицю\n" \
     "3. Розвязання методом Гауса\n" \
@@ -311,7 +337,7 @@ def main() :
         m_choise = input()
 
         if m_choise == "0" :
-            print("ЗАвершення роботи...")
+            print("Завершення роботи...")
             break
         
         if m_choise == "1" :
@@ -349,4 +375,4 @@ def main() :
 
 
 if __name__ == "__main__" :
-    main()  
+    main()
