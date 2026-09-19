@@ -267,17 +267,85 @@ def parseEquastion(eqStr : str):
         return coefs, rhs
 
 
+def printMenu() :
+    print("Головне меню:\n" \
+    "1. Зчитати матрицю\n" \
+    "2. Вивести поточну матрицю\n" \
+    "3. Розвязання методом Гауса\n" \
+    "4. Розвязання методом Якобі\n" \
+    "5. Розвязання методом Зейдаля\n" \
+    "6. Послідовне розвязання трьома методами\n" \
+    "0. Вийти\n" \
+    ">>", end=" ")
+
+
+def getInitialGuess(n : int) -> list[float] | None :
+    ans = input("Використати нульове початкове наближення x^(0)? (y/n) [за замовч. y]:").strip().lower()
+
+    if ans == "n" :
+        print(f"Введіть {n} через пробіл для x^(0) :")
+        while True :
+            try :
+                raw = input(">> ").split()
+                if len(raw) != n:
+                    print(f"Потрібно ввести рівно {n} чисел!")
+                    continue
+                return [float(val) for val in raw]
+            except ValueError :
+                print("Помилка: введіть коректні дійсні числа!")
+    return None
+
 def main() :
+
     slar = Slar()
-    print("Виберіть як вихочети заповнити СЛАР" \
-            "1. .txt файд введіть 'file'" \
-            "2. Вручну через консоль 'cmd'" \
-            ">>", end="")
-    slar.fillMatrix(str(input()))
-    #slar.simpleMatrixOutput()
-    slar.methodGaus()
-    slar.methodYacobi(x0 = None)
-    slar.methodZeidel(x0 = None)
+    m_isMatrixLoaded = False
+    m_initChoise = input("Перед початком роботи потрібно завантажити матрицю"
+    "Оберіть джерело даних ('file' - завантаження з .txt файлу, 'cmd' ручний ввід з консолі)\n >> ")
+
+    if slar.fillMatrix(m_initChoise) :
+        m_isMatrixLoaded = True
+        slar.simpleMatrixOutput()
+    
+    while True :
+        printMenu()
+        m_choise = input()
+
+        if m_choise == "0" :
+            print("ЗАвершення роботи...")
+            break
+        
+        if m_choise == "1" :
+            m_inpMode = input("Оберіть джерело даних ('file' - завантаження з .txt файлу, 'cmd' ручний ввід з консолі)\n >> ")
+            if slar.fillMatrix(m_inpMode) :
+                m_isMatrixLoaded = True
+                slar.simpleMatrixOutput()
+
+        if not m_isMatrixLoaded:
+            print("\nУвага!!! Матриця ще не завантажена! Спочатку оберіть пункт 1.")
+            continue
+                
+        match str(m_choise) :
+            case "2" :
+                slar.simpleMatrixOutput()
+
+            case "3" :
+                slar.methodGaus()
+
+            case "4" :
+                x0 = getInitialGuess(slar.n)
+                slar.methodYacobi(x0 = x0)
+
+            case "5" :
+                x0 = getInitialGuess(slar.n)
+                slar.methodZeidel(x0 = x0)
+
+            case "6" :
+                slar.methodGaus()
+                slar.methodYacobi(x0 = None)
+                slar.methodZeidel(x0 = None)
+
+            case _:
+                print("\nНевірний пункт меню! Введіть цифру від 0 до 6 включно.")
 
 
 if __name__ == "__main__" :
