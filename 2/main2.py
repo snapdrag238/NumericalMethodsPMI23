@@ -49,7 +49,7 @@ class Slar :
     def calcVectResidual(self, x : list[float]) -> tuple[list[float], float] :  #обч вектор невязки r = b - Ax, його неск форму ||r||inf
         r = [.0] * self.n
         for i in range(self.n) : 
-            Axi = sum(self.matrixA[i][j] * x[i] for j in range(self.n))
+            Axi = sum(self.matrixA[i][j] * x[j] for j in range(self.n))
             r[i] = self.matrixB[i] - Axi
         normR = max(abs(val) for val in r)
         return r, normR
@@ -58,8 +58,7 @@ class Slar :
         striclDomm = True
         for i in range(self.n) :
             diag = abs(self.matrixA[i][i])
-            offDiag = sum(abs(self.matrixA[i][j] for j in range(self.n) if j != i))
-
+            offDiag = sum(abs(self.matrixA[i][j]) for j in range(self.n) if j != i)
             if diag <= offDiag:
                 striclDomm = False
         return striclDomm
@@ -78,8 +77,9 @@ class Slar :
             maxRow = k
             maxVal = abs(A[k][k])
             for i in range(k+1, n):
-                maxVal = abs(A[i][k])
-                maxRow = i
+                if abs(A[i][k]) > maxVal:
+                    maxVal = abs(A[i][k])
+                    maxRow = i
 
             #перевірка на виродженість
             if maxVal < eps:
@@ -90,27 +90,39 @@ class Slar :
             if maxRow != k:
                 A[k], A[maxRow] = A[maxRow], A[k]
                 b[k], b[maxRow] = b[maxRow], b[k]
-                swap_count += 1
+                swapCount += 1
 
-            det *= A[k][k]
+        det *= A[k][k]
 
             #виключення невідомих
-            for i in range(k+1, n):
-                fct = A[i][k] / A[k][k]
-                A[i][k] = 0.0
-                for j in range(k+1, n):
-                    A[i][j] -= fct * A[k][j]
-                b[i] -= fct * b[k]
+        for i in range(k+1, n):
+            fct = A[i][k] / A[k][k]
+            A[i][k] = 0.0
+            for j in range(k+1, n):
+                A[i][j] -= fct * A[k][j]
+            b[i] -= fct * b[k]
 
-            #обч. та вивід показника
-            x = [0.0] * n
-            for i in range(n -1, -1, -1):
-                sumAx = sum(A[i][j] * x[j] for j in range(i+1, n))
-                x[i] = (b[i] - sumAx) / A[i][j]
+        #обч. та вивід показника
+        det *= (-1) ** swapCount
+        print("\nРезультат за методом Гауса:" \
+        f"Кількість перестановок рядків: {swapCount}"\
+        f"Визначник матриці (det A): {det}")
 
-            print("\nРозвязок:")
-            for i in range(n):
-                print(f"x{i + 1} = {x[i]:.6f}")
+        #зворотній хід
+        x = [0.0] * n
+        for i in range(n -1, -1, -1):
+            sumAx = sum(A[i][j] * x[j] for j in range(i+1, n))
+            x[i] = (b[i] - sumAx) / A[i][i]
+
+        print("\nРозвязок:")
+        for i in range(n):
+             print(f"x{i + 1} = {x[i]:.6f}")
+
+        r, normr = self.calcVectResidual(x)
+        print(f"Норма невязки ||r||inf = {normr:.6e}")
+
+        return True, x
+            
 
     def methodYacobi(self) -> bool:
         pass
@@ -126,8 +138,8 @@ class Slar :
         for i in range(self.n):
             print(" | ", end="")
             for j in range(self.n):
-                print(f"{self.matrixA[i][j]:8.2f}", end=" ")
-            print(f" | {self.matrixB[i]:6.2f}")
+                print(f"{self.matrixA[i][j]:.2f}", end=" ")
+            print(f" | {self.matrixB[i]:.2f}")
 
 
 
@@ -178,6 +190,7 @@ def main() :
             ">>", end="")
     slar.fillMatrix(str(input()))
     slar.simpleMatrixOutput()
+    slar.methodGaus()
 
 
 
