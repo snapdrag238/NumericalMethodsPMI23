@@ -19,7 +19,6 @@ class Slar :
 
         self.matrixA = [[0.0] * self.n for _ in range(self.n)]
         self.matrixB = [0.0] * self.n
-        self.matrixAns = [[0.0] * self.n for _ in range(self.n)]
 
 
     def fillMatrix(self,inpType : str) -> bool:
@@ -175,7 +174,7 @@ class Slar :
                 f"[Якобі] Досягнуто ліміту {maxIter} ітерацій без досягнення заданої точності eps={eps}!"
             )
 
-        print(f"Виконано ітреацій: {iters}")
+        print(f"Виконано ітереацій: {iters}")
         _, normr = self.calcVectResidual(xCurr)
         print(f"Норма невязки ||r||inf = {normr:.6e}")
 
@@ -252,7 +251,7 @@ class Slar :
     def matrixFileRead(self,fname : str) -> bool:
         try:
             with open(fname, "r", encoding="utf-8") as f:
-                        lines = f.readlines()
+                        lines = [line.strip() for line in f if line.strip()]
         except FileNotFoundError:
             print(f"Помилка!!! Файл {fname} не знайдено.")
             return False
@@ -314,11 +313,24 @@ def getInitialGuess(n : int) -> list[float] | None :
                 print("Помилка: введіть коректні дійсні числа!")
     return None
 
+
+def getEpsilon() -> float:
+    ans = input(f"Введіть точність eps [натисніть Enter для {EPSILON_ITER}]: ").strip()
+    if not ans:
+        return EPSILON_ITER
+    try:
+        val = float(ans)
+        return val if val > 0 else EPSILON_ITER
+    except ValueError:
+        print(f"Некоректний ввід, застосовано eps = {EPSILON_ITER}")
+        return EPSILON_ITER
+
+
 def main() :
 
     slar = Slar()
     m_isMatrixLoaded = False
-    m_initChoise = input("Перед початком роботи потрібно завантажити матрицю"
+    m_initChoise = input("Перед початком роботи потрібно завантажити матрицю\n"
     "Оберіть джерело даних ('file' - завантаження з .txt файлу, 'cmd' ручний ввід з консолі)\n >> ")
 
     if slar.fillMatrix(m_initChoise) :
@@ -338,6 +350,7 @@ def main() :
             if slar.fillMatrix(m_inpMode) :
                 m_isMatrixLoaded = True
                 slar.simpleMatrixOutput()
+            continue
 
         if not m_isMatrixLoaded:
             print("\nУвага!!! Матриця ще не завантажена! Спочатку оберіть пункт 1.")
@@ -351,12 +364,14 @@ def main() :
                 slar.methodGaus()
 
             case "4" :
+                epsVal = getEpsilon()
                 x0 = getInitialGuess(slar.n)
-                slar.methodYacobi(x0 = x0)
+                slar.methodYacobi(eps = epsVal, x0 = x0)
 
             case "5" :
+                epsVal = getEpsilon()
                 x0 = getInitialGuess(slar.n)
-                slar.methodZeidel(x0 = x0)
+                slar.methodZeidel(eps = epsVal, x0 = x0)
 
             case "6" :
                 slar.methodGaus()
