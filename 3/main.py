@@ -44,7 +44,7 @@ def norm_inf_matrix(A: list[list[float]]) -> float:
 
 
 def solve_linear_system(A: list[list[float]], b: list[float]) -> list[float]:
-    """Метод Гаусса для розв'язання A * delta = b на чистому Python"""
+    """Метод Гаусса для розв'язання A * delta = b"""
     n = len(b)
     M = [A[i][:] + [b[i]] for i in range(n)]
 
@@ -77,9 +77,7 @@ def simple_iter_method(eq: equation | equationSystem):
 
 
 def _simple_iter_equation(eq: equation):
-    print("=" * 80)
     print("МЕТОД ПРОСТОЇ ІТЕРАЦІЇ ДЛЯ ОДНОГО РІВНЯННЯ")
-    print("=" * 80)
 
     if eq.phi is None:
         raise ValueError("Для МПІ необхідно задати функцію phi(x)!")
@@ -136,9 +134,7 @@ def _simple_iter_equation(eq: equation):
 
 
 def _simple_iter_system(eq: equationSystem):
-    print("=" * 80)
     print("МЕТОД ПРОСТОЇ ІТЕРАЦІЇ ДЛЯ СИСТЕМИ")
-    print("=" * 80)
 
     if eq.Phi is None or eq.x0 is None:
         raise ValueError("Для системи необхідно задати Phi(x) та x0!")
@@ -199,9 +195,7 @@ def newton_method(eq: equation | equationSystem):
 
 
 def _newton_equation(eq: equation):
-    print("=" * 80)
     print("МЕТОД НЬЮТОНА ДЛЯ ОДНОГО РІВНЯННЯ")
-    print("=" * 80)
 
     if eq.df is None:
         raise ValueError("Для методу Ньютона потрібна похідна df!")
@@ -262,9 +256,7 @@ def _newton_equation(eq: equation):
 
 
 def _newton_system(eq: equationSystem):
-    print("=" * 80)
     print("МЕТОД НЬЮТОНА ДЛЯ СИСТЕМИ")
-    print("=" * 80)
 
     if eq.J is None or eq.x0 is None:
         raise ValueError("Для системи потрібні F, J та x0!")
